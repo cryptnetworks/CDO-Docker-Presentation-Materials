@@ -35,7 +35,6 @@ ARCH_TYPE=$(uname -m)
 echo "Detecting OS..."
 if [[ "$OS_TYPE" == "Linux" ]]; then
     echo "OS: Linux detected"
-    # Check Linux distribution
     if [[ -f /etc/os-release ]]; then
         . /etc/os-release
         DISTRO=$ID
@@ -45,7 +44,6 @@ if [[ "$OS_TYPE" == "Linux" ]]; then
     fi
 elif [[ "$OS_TYPE" == "Darwin" ]]; then
     echo "OS: macOS detected"
-    # Check Mac architecture
     if [[ "$ARCH_TYPE" == "arm64" ]]; then
         echo "Architecture: Apple Silicon (M1/M2)"
     else
@@ -55,6 +53,18 @@ else
     echo "Unsupported OS"
     exit 1
 fi
+
+# Function to check if Docker is installed
+is_docker_installed() {
+    if command -v docker &>/dev/null; then
+        return 0
+    elif [[ -f "/usr/local/bin/docker" || -f "/usr/bin/docker" || -f "/opt/homebrew/bin/docker" ]]; then
+        return 0
+    elif [[ "$OS_TYPE" == "Darwin" && -d "/Applications/Docker.app" ]]; then
+        return 0
+    fi
+    return 1
+}
 
 # Install Docker on Linux
 install_docker_linux() {
@@ -109,42 +119,53 @@ install_docker_macos() {
     fi
 }
 
-# Install Docker based on OS
-if [[ "$OS_TYPE" == "Linux" ]]; then
-    install_docker_linux
-elif [[ "$OS_TYPE" == "Darwin" ]]; then
-    install_docker_macos
+# Install Docker if not already installed
+if is_docker_installed; then
+    echo "Docker is already installed. Skipping installation."
+else
+    if [[ "$OS_TYPE" == "Linux" ]]; then
+        install_docker_linux
+    elif [[ "$OS_TYPE" == "Darwin" ]]; then
+        install_docker_macos
+    fi
 fi
 
-# Ensure Docker is running
-echo "Checking if Docker is running..."
-if ! docker info >/dev/null 2>&1; then
+# Function to check if Docker is running
+is_docker_running() {
+    docker info >/dev/null 2>&1
+}
+
+# Function to wait for Docker to start
+wait_for_docker() {
+    echo "Waiting for Docker to start..."
+    local tries=0
+    local max_tries=20
+    while ! is_docker_running; do
+        sleep 5
+        tries=$((tries+1))
+        if [[ $tries -ge $max_tries ]]; then
+            echo "Docker is taking too long to start. Please check manually."
+            exit 1
+        fi
+    done
+    echo "Docker is now running!"
+}
+
+# Check if Docker is running
+if ! is_docker_running; then
     if confirm "Docker is not running. Start Docker now?"; then
-        echo "Starting Docker..."
         if [[ "$OS_TYPE" == "Linux" ]]; then
             sudo systemctl start docker
         elif [[ "$OS_TYPE" == "Darwin" ]]; then
             open -a Docker
-            echo "Please wait for Docker to start and then rerun this script."
-            exit 1
+            echo "Waiting for Docker to start..."
         fi
+        wait_for_docker
     else
         echo "Docker must be running to proceed. Exiting."
         exit 1
     fi
 fi
-
-# Wait for Docker to be ready
-echo "Waiting for Docker to become available..."
-TRIES=0
-while ! docker info >/dev/null 2>&1; do
-    sleep 5
-    TRIES=$((TRIES+1))
-    if [[ $TRIES -ge 10 ]]; then
-        echo "Docker is taking too long to start. Please check manually."
-        exit 1
-    fi
-done
 
 # Install and start Portainer
 install_portainer() {
