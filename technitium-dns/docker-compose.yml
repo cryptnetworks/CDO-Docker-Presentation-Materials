@@ -1,0 +1,23 @@
+services:
+  technitium-dns:
+    image: technitium/dns-server:latest
+    container_name: technitium-dns
+    environment:
+      - TZ=UTC
+    ports:
+      - "53:53/udp"        # DNS service (UDP)
+      - "53:53/tcp"        # DNS service (TCP)
+      - "80:80"            # Web UI (HTTP)
+      - "443:443"          # Web UI (HTTPS)
+    volumes:
+      - ./technitium/dns-data:/config
+    restart: always
+    networks:
+      - dns_network
+
+networks:
+  dns_network:
+    driver: bridge
+
+volumes:
+  technitium_dns_data:

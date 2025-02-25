@@ -1,0 +1,39 @@
+services:
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+    ports:
+      - "3000:3000"  # Web UI
+      - "22:22"      # SSH for Git
+    volumes:
+      - gitea_data:/data
+    restart: always
+    networks:
+      - gitea_network
+    depends_on:
+      - db
+
+  db:
+    image: postgres:13
+    container_name: gitea-db
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=gitea_password
+      - POSTGRES_DB=gitea
+    volumes:
+      - gitea_db_data:/var/lib/postgresql/data
+    networks:
+      - gitea_network
+
+volumes:
+  gitea_data:
+    driver: local
+  gitea_db_data:
+    driver: local
+
+networks:
+  gitea_network:
+    driver: bridge
