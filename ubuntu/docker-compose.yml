@@ -6,7 +6,7 @@ services:
     tty: true           # Allocates a pseudo-TTY, useful for interactive use
     command: sleep infinity # Keeps the container running indefinitely
     volumes:
-      - ./data:/data    # Optional: You can mount a volume if you want to persist data
+      - /docker/ubuntu/:/    # Optional: You can mount a volume if you want to persist data
     networks:
       - ubuntu_network
     restart: always

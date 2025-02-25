@@ -13,8 +13,8 @@ services:
     ports:
       - "80:80"       # HTTP for web access
     volumes:
-      - ./bookstack/uploads:/var/www/bookstack/public/uploads  # Persist file uploads
-      - ./bookstack/storage:/var/www/bookstack/storage  # Persist app data
+      - /docker/bookstack/uploads:/var/www/bookstack/public/uploads  # Persist file uploads
+      - /docker/bookstack/storage:/var/www/bookstack/storage  # Persist app data
     depends_on:
       - db
     networks:
@@ -30,7 +30,7 @@ services:
       - MYSQL_USER=bookstackuser
       - MYSQL_PASSWORD=secretpassword
     volumes:
-      - ./bookstack/db:/var/lib/mysql  # Persist MySQL data
+      - /docker/bookstack/db:/var/lib/mysql  # Persist MySQL data
     networks:
       - bookstack_network
     restart: always

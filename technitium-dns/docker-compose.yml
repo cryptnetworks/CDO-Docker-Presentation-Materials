@@ -10,7 +10,7 @@ services:
       - "80:80"            # Web UI (HTTP)
       - "443:443"          # Web UI (HTTPS)
     volumes:
-      - ./technitium/dns-data:/config
+      - /docker/technitium/dns-data:/config
     restart: always
     networks:
       - dns_network

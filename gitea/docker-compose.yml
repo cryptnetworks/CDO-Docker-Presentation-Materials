@@ -9,7 +9,7 @@ services:
       - "3000:3000"  # Web UI
       - "22:22"      # SSH for Git
     volumes:
-      - gitea_data:/data
+      - /docker/gitea/data:/data
     restart: always
     networks:
       - gitea_network
@@ -24,7 +24,7 @@ services:
       - POSTGRES_PASSWORD=gitea_password
       - POSTGRES_DB=gitea
     volumes:
-      - gitea_db_data:/var/lib/postgresql/data
+      - /docker/gitea/data:/var/lib/postgresql/data
     networks:
       - gitea_network
 
